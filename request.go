@@ -9,6 +9,7 @@ import (
 	"context"
 	"encoding/json"
 	"encoding/xml"
+	"errors"
 	"fmt"
 	"io"
 	"net"
@@ -1043,7 +1044,12 @@ func (r *Request) Execute(method, url string) (*Response, error) {
 	)
 
 	if err != nil {
-		r.log.Errorf("%v", err)
+		logFn := r.log.Errorf
+		if errors.Is(err, context.Canceled) {
+			logFn = r.log.Warnf
+		}
+
+		logFn("%v", err)
 	}
 
 	r.client.onErrorHooks(r, resp, unwrapNoRetryErr(err))
